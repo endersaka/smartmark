@@ -89,7 +89,7 @@ function arrangeBootstrap() {
 
 var foundNode = null;
 function searchFolder(node, searchStr) {
-	if (node.url === undefined) {
+	if (node.url !== undefined) {
 		return;
 	}
 
