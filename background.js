@@ -53,17 +53,12 @@ function extendBookmarkInformations(bookmark) {
 function arrangeBootstrap() {
 	chrome.bookmarks.search('bootstrap OR Bootstrap', function(bookmarks) {
 		for (bookmark of bookmarks) {
-			// console.log('%s %s %s', bookmark.title, bookmark.url, bookmark.parentId);
-
 			if (bookmark.parentId === undefined) {
 				continue;
 			}
 
 			let extendedBookmark = extendBookmarkInformations(bookmark);
-
-			// if (bookmark.hasOwnProperty('children')) {
-				console.log(extendedBookmark);
-			// }
+			console.log(extendedBookmark);
 
 			// chrome.bookmarks.get(parentId, function (results) {
 			// 	if (results.length > 0) {
@@ -93,7 +88,15 @@ function arrangeBootstrap() {
  */
 var foundFolder = null;
 
-function searchFolder(node, str) {
+function searchFolderCallback(folder) {
+	console.log(folder);
+}
+
+// (function test() {
+// 	console.log(searchFolderCallback.toString());
+// })()
+
+function searchFolder(node, str, callback) {
 	// First of all I check if the 'url' property is undefined: if not, return
 	// false. In fact we are searching for a folder node and, accordingly to
 	// official Google Chrome Extensions documentation, 'url' property is
@@ -116,7 +119,9 @@ function searchFolder(node, str) {
 	if (node.title === str) {
 		foundFolder = node;
 		console.log('FOUND', foundFolder);
-
+		// if (callback !== undefined && callback != null && typeof callback === 'function') {
+		// 	callback(node);
+		// }
 		return true;
 	}
 
@@ -135,7 +140,7 @@ function searchFolder(node, str) {
 			// Recursively call searchFolder() passing the current child as the
 			// node parameter. In this case we also store the returned value
 			// into 'found' variable.
-			let found = searchFolder(child, str);
+			let found = searchFolder(child, str, callback);
 
 			// If found is equal true, it means we already found what we were
 			// looking for. Therefore we exit this loop.
