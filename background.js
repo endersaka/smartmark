@@ -82,6 +82,23 @@ function arrangeBootstrap() {
 	});
 }
 
+var smartmark = {
+	tree: null,
+	root: null, // Root node.
+	nodeScanStatus: [
+		{
+			index: null,
+			scannerId: null,
+			parent: null,
+			node: null,
+			children: null,
+			prevChild: null,
+			currChild: null,
+			status: null // "paused" | "running" | "completed"
+		}
+	]
+}
+
 /*
  * TODO: even if this is not the best solution probably (I mean: using a global
  * variable to store the found folder) it didn't figured out a better idea.
@@ -92,10 +109,12 @@ function searchFolderCallback(folder) {
 	console.log(folder);
 }
 
-// (function test() {
-// 	console.log(searchFolderCallback.toString());
-// })()
-
+/**
+ * Search the tree for a 'node' named like 'str'. This is a recursive function.
+ * @param  {BookmarkTreeNode}   node     The node from wich to start searching.
+ * @param  {string|String}   	str      The string we seach for (it is compared to the title of the node).
+ * @param  {Function} 			callback A callback called when we find the searched node.
+ */
 function searchFolder(node, str, callback) {
 	// First of all I check if the 'url' property is undefined: if not, return
 	// false. In fact we are searching for a folder node and, accordingly to
@@ -157,10 +176,21 @@ function searchFolder(node, str, callback) {
 	return false;
 }
 
+/**
+ * [getTreeCallback description]
+ * @param  {Array} tree The bookmarks tree passed to this callback by the
+ * 						getTree() function.
+ */
 function getTreeCallback(tree) {
-	searchFolder(tree[0], 'Bootstrap');
+	smartmark.root = tree[0];
+
+	searchFolder(smartmark.root, 'Bootstrap');
 }
 
+/**
+ * Get the entire bookmarks tree.
+ * @param  {Function} callback The callback to call when the tree is ready.
+ */
 function getTree(callback) {
 	chrome.bookmarks.getTree(callback);
 }
