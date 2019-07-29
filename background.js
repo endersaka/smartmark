@@ -87,74 +87,73 @@ function arrangeBootstrap() {
 	});
 }
 
-var foundNode = null;
-function searchFolder(node, searchStr) {
+/*
+ * TODO: even if this is not the best solution probably (I mean: using a global
+ * variable to store the found folder) it didn't figured out a better idea.
+ */
+var foundFolder = null;
+
+function searchFolder(node, str) {
+	// First of all I check if the 'url' property is undefined: if not, return
+	// false. In fact we are searching for a folder node and, accordingly to
+	// official Google Chrome Extensions documentation, 'url' property is
+	// "omitted" (https://developer.chrome.com/extensions/bookmarks#type-BookmarkTreeNode).
+	// "omitted" is a term that gave me a slightly headache. I expected a more
+	// proper language in the reference of a JavaScript API. Though I guessed
+	// they meant "undefined".
+	// NOTE: return value is used later to help prevent the algorithm
+	// traversing all the tree even if we have already found the folder we were
+	// searching for.
 	if (node.url !== undefined) {
-		return;
+		return false;
 	}
 
-	if (node.title === searchStr) {
-		foundNode = node;
-		return;
+	// Then I compare the title of the node with the searched string.
+	// If they are equal I assign node object to foundFolder variable, this way
+	// I make it visible to the rest of the script code.
+	// TODO: in the future I would like to implement more sophisticated string
+	// comparison, I could, for exmple, make a case insensitive comparison.
+	if (node.title === str) {
+		foundFolder = node;
+		console.log('FOUND', foundFolder);
+
+		return true;
 	}
 
+	// The folder could have children or not but the Google Chrome documentation
+	// is not very clear about the actual behavior of this function.
+	// NOTE: Google Chroome documentation does not explain it but I tested that
+	// all the functions that take a callback as a parameter are asyncronous.
 	chrome.bookmarks.getChildren(node.id, function (children) {
-		console.log('Node "%s" %s', node.title, node.id);
-
-		if (children === null || children.length === 0) {
+		// If children property is undefined, null or has length equal to zero
+		// this function returns immediatly.
+		if (children === undefined || children === null || children.length === 0) {
 			return;
 		}
 
 		for (child of children) {
-			searchFolder(child, searchStr);
+			// Recursively call searchFolder() passing the current child as the
+			// node parameter. In this case we also store the returned value
+			// into 'found' variable.
+			let found = searchFolder(child, str);
+
+			// If found is equal true, it means we already found what we were
+			// looking for. Therefore we exit this loop.
+			// NOTE: there can be more then a folder with the same name in the
+			// tree. There could be cases where we would like to collect them
+			// all.
+			// NOTE: checking for foundFolder nullity is probably just paranoia.
+			if (found === true && foundFolder !== null) {
+				break;
+			}
 		}
 	});
+
+	return false;
 }
 
-// var bookmarkChildFound = false;
-// function searchChildWithTitle(children, title) {
-// 	let currChild = null;
-//
-// 	for (child of children) {
-// 		if (!bookmarkChildFound) {
-// 			currChild = child;
-// 			bookmarkChildFound = child.title === title;
-// 			continue;
-// 		}
-// 		break;
-// 	}
-//
-// 	return currChild;
-// }
-
-// function getChildrenCallback(children) {
-// 	if (bookmarkChildFound) {
-// 		return;
-// 	}
-//
-// 	let result = searchChildWithTitle(children, 'Preferiti su disp. mobili');
-//
-// 	if (result === null) {
-// 		console.log(result);
-// 	} else {
-// 		for (child of children) {
-// 			chrome.bookmarks.getChildren(child.id, getChildrenCallback);
-// 		}
-// 	}
-// }
-
 function getTreeCallback(tree) {
-	console.log('Number of elements in the tree:', tree.length);
-	console.log(tree);
-
-	// Start exploration. root is tree[0].
-	//chrome.bookmarks.getChildren(tree[0].id, getChildrenCallback);
-
-	searchFolder(tree[0], 'IT');
-
-	if (foundNode !== null) {
-		console.log(foundNode);
-	}
+	searchFolder(tree[0], 'Bootstrap');
 }
 
 function getTree(callback) {
